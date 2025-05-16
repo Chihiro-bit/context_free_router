@@ -15,7 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  
+  final router = ContextFreeRouter.instance as ContextFreeRouterImpl;
   @override
   void dispose() {
     _emailController.dispose();
@@ -24,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   }
   
   Future<void> _handleLogin() async {
+    print(ContextFreeRouter.instance.canGoBack());
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
