@@ -135,7 +135,6 @@ final slide = NestedRouteTransition(
 > 下图展示了从调用 `navigateTo / navigateToNested` 到最终返回的完整执行链：拦截器 → 嵌套/根导航 → 监听器。
 
 ![Context-Free Router 流程图](docs/context_free_router_flowchart.png)
-![Context-Free Router 流程图](docs/context_free_router_flowchart_cn.png)
 
 ## 🗂️ API 速查
 
