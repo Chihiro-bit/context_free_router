@@ -30,9 +30,7 @@
 
 ```yaml
 dependencies:
-  context_free_router:
-    git:
-      url: https://github.com/your-org/context_free_router
+  context_free_router: ^1.0.1
 ```
 
 ---
