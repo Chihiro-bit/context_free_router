@@ -130,6 +130,12 @@ final slide = NestedRouteTransition(
 ```
 
 ---
+## 📑 路由执行流程
+
+> 下图展示了从调用 `navigateTo / navigateToNested` 到最终返回的完整执行链：拦截器 → 嵌套/根导航 → 监听器。
+
+![Context-Free Router 流程图](docs/context_free_router_flowchart.png)
+![Context-Free Router 流程图](docs/context_free_router_flowchart_cn.png)
 
 ## 🗂️ API 速查
 
@@ -166,47 +172,6 @@ flutter run
 ```
 
 ---
-flowchart TD
-%% ────────────────────────────────
-%% 1. 入口：navigateTo / navigateToNested
-%% ────────────────────────────────
-A[NavigateTo /<br/>NavigateToNested 調用] --> B{是否巢狀路由?}
-
-%% 2. 建立 RouteConfig
-B -->|是| C[建立<br/>Nested RouteConfig]
-B -->|否| D[建立<br/>RouteConfig]
-
-%% 3. 共用流程 _processNavigation
-C --> E[_processNavigation]:::fn
-D --> E
-
-%% 4. 依優先級執行所有 Interceptor
-E --> F[依 priority 執行<br/>Interceptor 鏈]:::fn
-F --> G{Interceptor 結果}
-
-%% 4-1. 取消
-G -->|cancel| H[Monitors.onRouteCancelled]:::monitor --> I[返回 null]
-
-%% 4-2. 重定向
-G -->|redirect| J[Monitors.onRouteRedirected]:::monitor --> K[_processNavigation(<br/>redirectTo)]:::fn
-
-%% 4-3. 通過
-G -->|proceed| L[繼續流程]
-
-%% 5. 決定實際 push 路由
-L --> M{是否 Nested?}
-M -->|是| N[_performNestedNavigation<br/>(push 子 Navigator)]:::fn
-M -->|否| R[_performNavigation<br/>(push / replace)]:::fn
-
-%% 6. 更新狀態 & 回調
-N & R --> O[更新 _currentRoute]
-O --> P[Monitors.onRouteChanged]:::monitor --> Q[回傳 Future<T?>]
-
-%% 7. 例外處理
-E -.-> X[catch(e)]:::error -.-> Y[Monitors.onRouteError]:::monitor
-classDef fn fill:#FFC,stroke:#333;
-classDef monitor fill:#CFF,stroke:#333;
-classDef error fill:#FDD,stroke:#333;
 
 ## 🤝 贡献指南
 
