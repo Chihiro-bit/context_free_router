@@ -68,6 +68,25 @@ class NestedNavigationManager {
     return null;
   }
 
+  /// Push a route and clear all previous routes in the nested navigator.
+  /// 清空栈后推入新路由
+  Future<T?> pushAndRemoveUntil<T>(
+      String parentPath, RouteConfig config, Route<T> route) async {
+    final navigatorKey = _nestedNavigatorKeys[parentPath];
+    if (navigatorKey?.currentState != null) {
+      _nestedRouteStacks[parentPath] = [config];
+      return navigatorKey!.currentState!
+          .pushAndRemoveUntil(route, (Route<dynamic> _) => false);
+    }
+    return null;
+  }
+
+  /// Clear a specific nested navigator stack.
+  /// 清除指定嵌套导航栈
+  void clearNested(String parentPath) {
+    _nestedRouteStacks.remove(parentPath);
+  }
+
   /// Get the current route in a nested navigator.
   /// 获取嵌套导航器的当前路由
   RouteConfig? getCurrentRoute(String parentPath) {

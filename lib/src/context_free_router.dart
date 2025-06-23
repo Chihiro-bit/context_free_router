@@ -179,6 +179,14 @@ abstract class ContextFreeRouter {
         bool replace = false,
       });
 
+  /// Navigate to a route and clear the navigation stack.
+  /// 清空栈后跳转到指定路由
+  Future<T?> offAll<T>(
+      String path, {
+        Map<String, dynamic>? params,
+        Object? extra,
+      });
+
   /// Go back to the previous route.
   /// 返回上一路由
   void goBack<T>([T? result]);
