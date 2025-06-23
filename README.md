@@ -142,6 +142,7 @@ final slide = NestedRouteTransition(
 | `navigatorKey` / `currentRoute` | 全局 NavigatorKey / 当前路由             |
 | `register / registerNested`     | 注册根路由 / 子路由                        |
 | `navigateTo / navigateToNested` | 跳转根路由 / 子路由                        |
+| `offAll`                        | 清空栈后跳转                               |
 | `goBack / canGoBack`            | 返回 / 是否可返回                         |
 | `RouteInterceptor`              | 自定义拦截器基类                           |
 | `RouteMonitor`                  | 路由监控基类                             |

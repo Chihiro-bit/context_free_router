@@ -94,7 +94,10 @@ class ContextFreeRouterImpl implements ContextFreeRouter {
 
       // Process navigation through interceptors
       // 通过拦截器处理导航
-      final result = await _processNavigation<T>(nestedConfig, replace: replace);
+      final result = await _processNavigation<T>(
+        nestedConfig,
+        replace: replace,
+      );
 
       // If navigation was successful, update the current route
       // 如果导航成功，更新当前路由
@@ -105,7 +108,48 @@ class ContextFreeRouterImpl implements ContextFreeRouter {
       return result;
     }
 
-    return _processNavigation<T>(to, replace: replace);
+    return _processNavigation<T>(
+      to,
+      replace: replace,
+    );
+  }
+
+  /// Navigate to a route and clear the navigation stack.
+  /// 清空栈后跳转到指定路由
+  @override
+  Future<T?> offAll<T>(
+      String path, {
+        Map<String, dynamic>? params,
+        Object? extra,
+      }) async {
+    final to = RouteConfig(
+      path: path,
+      params: params,
+      extra: extra,
+    );
+
+    // Determine if this is a nested route
+    final parentPath = _registry.getParentPath(path);
+    if (parentPath != null) {
+      final nestedConfig = RouteConfig(
+        path: path,
+        params: params,
+        extra: extra,
+        parentPath: parentPath,
+        isNested: true,
+      );
+
+      final result =
+          await _processNavigation<T>(nestedConfig, clearStack: true);
+
+      if (result != null) {
+        _currentRoute = nestedConfig;
+      }
+
+      return result;
+    }
+
+    return _processNavigation<T>(to, clearStack: true);
   }
 
   /// Navigate to a nested route.
@@ -153,7 +197,8 @@ class ContextFreeRouterImpl implements ContextFreeRouter {
 
   /// Process the navigation through interceptors and then navigate.
   /// 通过拦截器处理导航然后执行导航
-  Future<T?> _processNavigation<T>(RouteConfig to, {bool replace = false}) async {
+  Future<T?> _processNavigation<T>(RouteConfig to,
+      {bool replace = false, bool clearStack = false}) async {
     final from = _currentRoute;
     final context = InterceptorContext(from: from, to: to);
 
@@ -184,7 +229,11 @@ class ContextFreeRouterImpl implements ContextFreeRouter {
       if (to.isNested && to.parentPath != null) {
         // Handle nested navigation
         // 处理嵌套导航
-        final result = await _performNestedNavigation<T>(to, replace: replace);
+        final result = await _performNestedNavigation<T>(
+          to,
+          replace: replace,
+          clearStack: clearStack,
+        );
 
         // Update the current route
         // 更新当前路由
@@ -201,7 +250,11 @@ class ContextFreeRouterImpl implements ContextFreeRouter {
 
       // All interceptors passed, perform the navigation
       // 所有拦截器通过，执行导航
-      final result = await _performNavigation<T>(to, replace: replace);
+      final result = await _performNavigation<T>(
+        to,
+        replace: replace,
+        clearStack: clearStack,
+      );
       _currentRoute = to;
 
       for (final monitor in _monitors) {
@@ -219,7 +272,8 @@ class ContextFreeRouterImpl implements ContextFreeRouter {
 
   /// Perform nested navigation.
   /// 执行嵌套导航
-  Future<T?> _performNestedNavigation<T>(RouteConfig config, {bool replace = false}) async {
+  Future<T?> _performNestedNavigation<T>(RouteConfig config,
+      {bool replace = false, bool clearStack = false}) async {
     final parentPath = config.parentPath!;
     // Create the route
     // 创建路由
@@ -236,12 +290,22 @@ class ContextFreeRouterImpl implements ContextFreeRouter {
 
     // Push the route to the nested navigator
     // 将路由推入嵌套导航器
-    return _nestedNavigationManager.push<T>(parentPath, config, route);
+    if (clearStack) {
+      return _nestedNavigationManager.pushAndRemoveUntil<T>(
+          parentPath, config, route);
+    } else if (replace) {
+      // Replace current route in nested navigator
+      await _nestedNavigationManager.pop(parentPath);
+      return _nestedNavigationManager.push<T>(parentPath, config, route);
+    } else {
+      return _nestedNavigationManager.push<T>(parentPath, config, route);
+    }
   }
 
   /// Perform the actual navigation.
   /// 执行实际导航
-  Future<T?> _performNavigation<T>(RouteConfig config, {bool replace = false}) {
+  Future<T?> _performNavigation<T>(RouteConfig config,
+      {bool replace = false, bool clearStack = false}) {
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
       throw Exception('Navigator is not available. Make sure to use the navigatorKey in your MaterialApp.');
@@ -258,7 +322,10 @@ class ContextFreeRouterImpl implements ContextFreeRouter {
       ),
     );
 
-    if (replace) {
+    if (clearStack) {
+      _nestedNavigationManager.clear();
+      return navigator.pushAndRemoveUntil(route, (Route<dynamic> _) => false);
+    } else if (replace) {
       return navigator.pushReplacement(route);
     } else {
       return navigator.push(route);
